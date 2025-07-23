@@ -46,7 +46,7 @@ jobs:
             --image $REGION-docker.pkg.dev/$PROJECT_ID/$REPO/preprocess_service \
             --region $REGION --platform managed \
             --set-env-vars BUCKET=$GCS_BUCKET \
-            --quiet --allow-unauthenticated
+            --quiet --no-allow-unauthenticated
 
       - name: Deploy classify service
         env:
@@ -55,4 +55,4 @@ jobs:
           gcloud run deploy classify-service \
             --image $REGION-docker.pkg.dev/$PROJECT_ID/$REPO/classify_service \
             --region $REGION --platform managed \
-            --allow-unauthenticated --quiet
+            --no-allow-unauthenticated --quiet
