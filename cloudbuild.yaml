@@ -1,0 +1,10 @@
+steps:
+  - id: 'Build preprocess_service'
+    name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', '$REGION-docker.pkg.dev/$PROJECT_ID/$REPO/preprocess_service', './preprocess_service']
+  - id: 'Build classify_service'
+    name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', '$REGION-docker.pkg.dev/$PROJECT_ID/$REPO/classify_service', './classify_service']
+images:
+  - '$REGION-docker.pkg.dev/$PROJECT_ID/$REPO/preprocess_service'
+  - '$REGION-docker.pkg.dev/$PROJECT_ID/$REPO/classify_service'

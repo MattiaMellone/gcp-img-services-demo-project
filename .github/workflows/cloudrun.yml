@@ -1,0 +1,58 @@
+name: Build and Deploy to Cloud Run
+
+on:
+  push:
+    branches: [ main ]
+
+env:
+  PROJECT_ID: ${{ vars.PROJECT_ID }}
+  REGION: ${{ vars.REGION }}
+  REPO: ${{ vars.REPO }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - id: auth
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - uses: google-github-actions/setup-gcloud@v1
+        with:
+          project_id: ${{ env.PROJECT_ID }}
+          install_components: 'beta'
+
+      - name: Configure Docker
+        run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
+
+      - name: Build and push preprocess image
+        run: |
+          docker build -t $REGION-docker.pkg.dev/$PROJECT_ID/$REPO/preprocess_service preprocess_service
+          docker push $REGION-docker.pkg.dev/$PROJECT_ID/$REPO/preprocess_service
+
+      - name: Build and push classify image
+        run: |
+          docker build -t $REGION-docker.pkg.dev/$PROJECT_ID/$REPO/classify_service classify_service
+          docker push $REGION-docker.pkg.dev/$PROJECT_ID/$REPO/classify_service
+
+      - name: Deploy preprocess service
+        env:
+          GCS_BUCKET: ${{ secrets.GCS_BUCKET }}
+        run: |
+          gcloud run deploy preprocess-service \
+            --image $REGION-docker.pkg.dev/$PROJECT_ID/$REPO/preprocess_service \
+            --region $REGION --platform managed \
+            --set-env-vars BUCKET=$GCS_BUCKET \
+            --quiet --allow-unauthenticated
+
+      - name: Deploy classify service
+        env:
+          GCS_BUCKET: ${{ secrets.GCS_BUCKET }}
+        run: |
+          gcloud run deploy classify-service \
+            --image $REGION-docker.pkg.dev/$PROJECT_ID/$REPO/classify_service \
+            --region $REGION --platform managed \
+            --allow-unauthenticated --quiet
