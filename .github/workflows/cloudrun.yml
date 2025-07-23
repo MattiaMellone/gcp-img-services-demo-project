@@ -43,16 +43,20 @@ jobs:
           GCS_BUCKET: ${{ secrets.GCS_BUCKET }}
         run: |
           gcloud run deploy preprocess-service \
-            --image $REGION-docker.pkg.dev/$PROJECT_ID/$REPO/preprocess_service \
-            --region $REGION --platform managed \
-            --set-env-vars BUCKET=$GCS_BUCKET \
-            --quiet --no-allow-unauthenticated
+                 --image $REGION-docker.pkg.dev/$PROJECT_ID/$REPO/preprocess_service \
+                 --region $REGION --platform managed \
+                 --set-env-vars BUCKET=$GCS_BUCKET \
+                 --quiet --no-allow-unauthenticated \
+                 --service-account gha-runner@beasy4biz-demo-project.iam.gserviceaccount.com
+
 
       - name: Deploy classify service
         env:
           GCS_BUCKET: ${{ secrets.GCS_BUCKET }}
         run: |
           gcloud run deploy classify-service \
-            --image $REGION-docker.pkg.dev/$PROJECT_ID/$REPO/classify_service \
-            --region $REGION --platform managed \
-            --no-allow-unauthenticated --quiet
+                 --image $REGION-docker.pkg.dev/$PROJECT_ID/$REPO/classify_service \
+                 --region $REGION --platform managed \
+                 --set-env-vars BUCKET=$GCS_BUCKET \
+                 --quiet --no-allow-unauthenticated \
+                 --service-account gha-runner@beasy4biz-demo-project.iam.gserviceaccount.com

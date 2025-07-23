@@ -3,3 +3,4 @@ uvicorn[standard]
 opencv-python-headless
 google-cloud-storage
 numpy
+python-multipart
