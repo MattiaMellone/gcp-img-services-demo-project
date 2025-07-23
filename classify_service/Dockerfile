@@ -13,6 +13,13 @@ RUN apt-get update && \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Pre‑scarica i pesi di MobileNetV2 per ridurre il cold‑start
+RUN python - <<'PY'
+import tensorflow as tf
+from tensorflow.keras.applications import mobilenet_v2
+mobilenet_v2.MobileNetV2(weights="imagenet")
+PY
+
 COPY main.py .
 
 ENV PORT=8080
