@@ -1,45 +1,86 @@
-# gcp-img-services-demo-project
+# Image Processing Services Demo
 
-This repository contains a demo composed of two small FastAPI microservices that can be deployed to Google Cloud Run. They work together to preprocess an image and classify it using MobileNetV2.
+[![Build Status](https://example.com/status.svg)](https://example.com)
 
-## Services
+Proof-of-concept demonstrating deployment of two image-processing micro-services
+on Google Cloud Run. The pipeline performs image pre-processing followed by
+classification with MobileNetV2.
 
-- **preprocess_service** – receives an image, converts it to grayscale, resizes it to 224×224, runs Canny edge detection and saves the result as PNG into a Google Cloud Storage bucket specified by the `BUCKET` environment variable.
-- **classify_service** – receives the `gcs_path` of a processed image, downloads it from Cloud Storage and performs image classification with MobileNetV2 (`weights="imagenet"`).
+## Architecture
 
-## Requirements
-
-- Docker
-- Google Cloud account with Artifact Registry and Cloud Run enabled
-- Python 3.11 for local execution
+```mermaid
+flowchart TD
+    subgraph Client
+        C[User]
+    end
+    C --> |"/preprocess"| P[preprocess_service]
+    P --> |"gs://bucket/image.jpg"| G[(GCS Bucket)]
+    G --> |"/classify"| CLS[classify_service]
+    CLS --> R[Prediction]
+```
 
 ## Quick start
+
+### Prerequisites
+- Google Cloud account with Cloud Run enabled
+- Docker and GitHub Actions
+- `gcloud` CLI authenticated (`gcloud auth login`)
+
+### Build and deploy
+Run the GitHub Actions workflow which builds the images and deploys them to Cloud Run:
+
+```bash
+# trigger from local git
+git push origin main
+```
+
+The workflow builds Docker images and pushes them to Artifact Registry. It then
+deploys both services to Cloud Run.
+
+## Local development
 
 ```bash
 # Preprocess service
 cd preprocess_service
-uvicorn main:app --reload
+BUCKET=my-bucket docker compose up --build
 
-# In a separate terminal classify service
-cd classify_service
-uvicorn main:app --reload
+# Classify service
+cd ../classify_service
+docker compose up --build
+```
+Set the `BUCKET` environment variable for the preprocess service. Both services
+expose a FastAPI app on `localhost:8000` by default.
+
+## Endpoints
+
+### POST /preprocess
+Send a multipart/form-data request containing an image file.
+Response example:
+```json
+{ "gcs_path": "gs://my-bucket/image.jpg" }
 ```
 
-Images are stored in the bucket defined by `BUCKET`. When deployed to Cloud Run the images are pushed to Artifact Registry and the services are automatically deployed.
-
-## Architecture
-
+### POST /classify
+Send JSON with the path returned by the preprocess service.
+Response example:
+```json
+{ "label": "Labrador retriever", "confidence": 0.93 }
 ```
-+--------+      POST /preprocess        +------------------+
-| Client | ---------------------------> | preprocess_service|
-+--------+                               +------------------+
-                                               |
-                                               | gs://bucket/image.png
-                                               v
-                                        +------------------+
-                                        | classify_service |
-                                        +------------------+
-                                               |
-                                               v
-                                            Prediction
+
+## Cost control
+- Cloud Run charges per request and compute time; keep traffic low during testing.
+- Delete services and Artifact Registry images when finished:
+```bash
+gcloud run services delete preprocess-service
+gcloud run services delete classify-service
 ```
+
+## Extensions
+- Add authentication between the services
+- Experiment with different models or preprocessing steps
+
+## License
+MIT
+
+## Author
+Your Name Here
