@@ -1,0 +1,8 @@
+fastapi
+uvicorn[standard]
+opencv-python-headless
+google-cloud-storage
+numpy
+tensorflow-cpu==2.15.0
+python-multipart
+google-cloud-pubsub
