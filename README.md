@@ -133,6 +133,8 @@ gcloud pubsub topics delete img-preprocessed
 
 GPL v3
 
+> **Note:** Parts of the codebase and documentation were created with the support of generative AI tools (e.g., OpenAI ChatGPT + Codex). All content has been manually reviewed before publication.
+
 ---
 
 © 2025 Mattia Mellone
